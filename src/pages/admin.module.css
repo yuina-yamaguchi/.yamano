@@ -1,0 +1,26 @@
+.page { min-height: 100vh; }
+.header {
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px 16px; border-bottom: 1px solid #1a1a1a;
+  position: sticky; top: 0; background: #0a0a0a;
+}
+.header h1 { font-size: 1.1rem; font-weight: 700; }
+.back { background: none; border: none; color: #888; cursor: pointer; font-size: 14px; }
+.main { max-width: 600px; margin: 0 auto; padding: 24px 16px; }
+.sectionTitle { font-size: 1rem; font-weight: 600; margin-bottom: 12px; color: #aaa; }
+.empty { color: #444; font-size: 14px; }
+.userRow {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 14px; background: #111; border-radius: 10px;
+  margin-bottom: 8px; border: 1px solid #1e1e1e;
+}
+.name { font-weight: 600; font-size: 14px; }
+.email { font-size: 12px; color: #555; margin-top: 2px; }
+.approveBtn {
+  padding: 7px 14px; background: #f0f0f0; color: #0a0a0a;
+  border: none; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.revokeBtn {
+  padding: 7px 14px; background: #222; color: #ff6b6b;
+  border: 1px solid #333; border-radius: 6px; font-size: 13px; cursor: pointer;
+}

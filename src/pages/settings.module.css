@@ -1,0 +1,33 @@
+.page { min-height: 100vh; }
+.header {
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px 16px; border-bottom: 1px solid #1a1a1a;
+  position: sticky; top: 0; background: #0a0a0a;
+}
+.header h1 { font-size: 1.1rem; font-weight: 700; }
+.back { background: none; border: none; color: #888; cursor: pointer; font-size: 14px; }
+.main { max-width: 480px; margin: 0 auto; padding: 32px 16px; }
+.iconSection { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 32px; }
+.changeIcon {
+  padding: 8px 16px; background: #1a1a1a; border: 1px solid #333;
+  border-radius: 8px; color: #f0f0f0; cursor: pointer; font-size: 14px;
+}
+.changeIcon:disabled { opacity: 0.5; }
+.form { display: flex; flex-direction: column; gap: 8px; }
+.label { font-size: 13px; color: #888; margin-top: 8px; }
+.input {
+  padding: 12px; background: #1a1a1a; border: 1px solid #333;
+  border-radius: 8px; color: #f0f0f0; font-size: 15px; outline: none;
+}
+.input:disabled { opacity: 0.4; }
+.hint { font-size: 12px; color: #444; }
+.saveBtn {
+  margin-top: 16px; padding: 14px; background: #f0f0f0; color: #0a0a0a;
+  border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer;
+}
+.saveBtn:disabled { opacity: 0.5; }
+.logoutBtn {
+  margin-top: 40px; width: 100%; padding: 14px;
+  background: none; border: 1px solid #333;
+  border-radius: 8px; color: #ff6b6b; cursor: pointer; font-size: 15px;
+}

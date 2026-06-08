@@ -1,0 +1,49 @@
+.sidebar {
+  width: 200px;
+  flex-shrink: 0;
+  padding: 16px 8px;
+  border-right: 1px solid #1a1a1a;
+  overflow-y: auto;
+  height: calc(100vh - 53px);
+  position: sticky;
+  top: 53px;
+}
+
+.heading {
+  font-size: 11px;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0 8px 10px;
+}
+
+.member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 8px;
+}
+
+.inactive { opacity: 0.4; }
+
+.name {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* スマホ: アイコンのみ */
+@media (max-width: 640px) {
+  .sidebar {
+    width: 52px;
+    padding: 12px 4px;
+    border-right: 1px solid #1a1a1a;
+  }
+  .heading { display: none; }
+  .name { display: none; }
+  .member { padding: 4px; justify-content: center; }
+}
