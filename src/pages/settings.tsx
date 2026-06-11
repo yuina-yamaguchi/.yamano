@@ -82,7 +82,7 @@ export default function SettingsPage() {
           />
 
           <label className={styles.label}>メールアドレス</label>
-          <input className={styles.input} value={profile.email} disabled />
+          <input className={styles.input} value={user?.email ?? ""} disabled />
           <p className={styles.hint}>メールアドレスの変更は現在サポートされていません</p>
 
           <button className={styles.saveBtn} type="submit" disabled={saving}>
