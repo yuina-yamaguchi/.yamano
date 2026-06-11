@@ -47,10 +47,13 @@ async function seed() {
     await setDoc(doc(db, "users", uid), {
       uid,
       name,
-      email: `dummy${i + 1}@example.com`,
       approved: true,
       role: "user",
       photoUrl: null,
+    });
+
+    await setDoc(doc(db, "users_private", uid), {
+      email: `dummy${i + 1}@example.com`,
     });
 
     // 投稿（約2/3のユーザーが投稿済み、時間をずらす）

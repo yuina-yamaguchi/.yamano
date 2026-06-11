@@ -29,11 +29,13 @@ export default function AuthPage() {
         const { user } = await createUserWithEmailAndPassword(auth, email, password);
         await setDoc(doc(db, "users", user.uid), {
           uid: user.uid,
-          email,
           name,
           approved: false,
           role: "user",
           createdAt: serverTimestamp(),
+        });
+        await setDoc(doc(db, "users_private", user.uid), {
+          email: email,
         });
         router.push("/pending");
       }

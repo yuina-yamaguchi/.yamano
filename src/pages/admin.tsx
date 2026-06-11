@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import styles from "./admin.module.css";
 
 type UserRecord = { uid: string; email: string; name: string; approved: boolean };
+type UserDoc = { uid: string; name: string; approved: boolean };
 
 export default function AdminPage() {
   const router = useRouter();
@@ -18,8 +19,22 @@ export default function AdminPage() {
   }, [profile, loading]);
 
   async function fetchUsers() {
-    const snap = await getDocs(collection(db, "users"));
-    setUsers(snap.docs.map((d) => d.data() as UserRecord));
+    const [usersSnap, privateSnap] = await Promise.all([
+      getDocs(collection(db, "users")),
+      getDocs(collection(db, "users_private"))
+    ]);
+    const privateData = Object.fromEntries(
+      privateSnap.docs.map((d) => [d.id, d.data().email])
+    );
+    setUsers(
+      usersSnap.docs.map((d) => {
+        const data = d.data() as UserDoc;
+        return {
+          ...data,
+          email: privateData[d.id] || "(非公開)",
+        };
+      })
+    );
   }
 
   async function approve(uid: string, approved: boolean) {

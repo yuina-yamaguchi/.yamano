@@ -18,6 +18,11 @@ service cloud.firestore {
       allow update: if request.auth.uid == uid || isAdmin();
     }
 
+    match /users_private/{uid} {
+      allow read: if request.auth.uid == uid || isAdmin();
+      allow write: if request.auth.uid == uid || isAdmin();
+    }
+
     match /posts/{postId} {
       allow read: if isApproved();
       allow create: if isApproved();

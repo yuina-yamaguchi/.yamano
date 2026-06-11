@@ -34,8 +34,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (u) {
-        const snap = await getDoc(doc(db, "users", u.uid));
-        setProfile(snap.exists() ? (snap.data() as UserProfile) : null);
+        const [snap, privateSnap] = await Promise.all([
+          getDoc(doc(db, "users", u.uid)),
+          getDoc(doc(db, "users_private", u.uid))
+        ]);
+        if (snap.exists()) {
+          const userData = snap.data();
+          const privateData = privateSnap.exists() ? privateSnap.data() : {};
+          
+          setProfile({
+            uid: u.uid,
+            name: userData.name || "",
+            approved: userData.approved || false,
+            role: userData.role || "user",
+            photoUrl: userData.photoUrl,
+            bio: userData.bio,
+            email: privateData.email || u.email || "",
+          });
+        } else {
+          setProfile(null);
+        }
       } else {
         setProfile(null);
       }
@@ -43,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  async function updateProfile(data: Partial<Pick<UserProfile, "name" | "photoUrl">>) {
+  async function updateProfile(data: Partial<Pick<UserProfile, "name" | "photoUrl" | "bio">>) {
     if (!user) return;
     await updateDoc(doc(db, "users", user.uid), data);
     setProfile((prev) => prev ? { ...prev, ...data } : prev);
