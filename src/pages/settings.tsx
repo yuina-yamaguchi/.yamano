@@ -13,6 +13,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const { user, profile, loading, updateProfile } = useAuth();
   const [name, setName] = useState(profile?.name ?? "");
+  const [bio, setBio] = useState(profile?.bio ?? "");
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -39,7 +40,7 @@ export default function SettingsPage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    await updateProfile({ name });
+    await updateProfile({ name, bio });
     setSaving(false);
     setDone(true);
     setTimeout(() => setDone(false), 2000);
@@ -69,6 +70,17 @@ export default function SettingsPage() {
             onChange={(e) => setName(e.target.value)}
             required
           />
+
+          <label className={styles.label}>自己紹介 (50文字まで)</label>
+          <textarea
+            className={styles.textarea}
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            maxLength={50}
+            rows={2}
+            placeholder="自己紹介を入力してください..."
+          />
+
           <label className={styles.label}>メールアドレス</label>
           <input className={styles.input} value={profile.email} disabled />
           <p className={styles.hint}>メールアドレスの変更は現在サポートされていません</p>

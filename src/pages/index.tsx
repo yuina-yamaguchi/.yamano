@@ -19,7 +19,8 @@ type Post = {
   comment: string; mediaUrl: string; mediaType: string;
   createdAt: Date; reactions: Reaction[]; myReaction: boolean;
 };
-type UserCard = { uid: string; name: string; photoUrl?: string; post: Post | null };
+type UserCard = { uid: string; name: string; photoUrl?: string; bio?: string; post: Post | null };
+type UserCardList = UserCard[];
 
 // コンポーネント外のユーティリティ関数
 function seededRandom(seed: string, offset: number) {
@@ -102,7 +103,7 @@ export default function Home() {
     if (!user) return;
     const usersSnap = await getDocs(collection(db, "users"));
     const users = usersSnap.docs
-      .map((d) => d.data() as { uid: string; name: string; photoUrl?: string; approved: boolean })
+      .map((d) => d.data() as { uid: string; name: string; photoUrl?: string; bio?: string; approved: boolean })
       .filter((u) => u.approved);
     const postsSnap = await getDocs(query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(200)));
     const cutoff = Date.now() - 24 * 3600000;
@@ -120,7 +121,7 @@ export default function Home() {
       };
     }
     const result: UserCard[] = users.map((u) => ({
-      uid: u.uid, name: u.name, photoUrl: u.photoUrl, post: latestPost[u.uid] ?? null,
+      uid: u.uid, name: u.name, photoUrl: u.photoUrl, bio: u.bio, post: latestPost[u.uid] ?? null,
     }));
     result.sort((a, b) => {
       if (a.post && b.post) return b.post.createdAt.getTime() - a.post.createdAt.getTime();
@@ -172,6 +173,14 @@ export default function Home() {
     else await setDoc(reactionRef, { uid: user.uid, name: profile.name, photoUrl: profile.photoUrl ?? null });
   }
 
+  async function handleDeletePost(post: Post) {
+    if (!user || post.uid !== user.uid) return;
+    if (!confirm("投稿を削除しますか？")) return;
+    await deleteDoc(doc(db, "posts", post.id));
+    setSelectedCard(null);
+    buildCards();
+  }
+
   if (loading || !user || !profile?.approved) return null;
 
   const delays = cards.map((_, i) => `${(i * 0.37) % 2.5}s`);
@@ -183,7 +192,7 @@ export default function Home() {
       <header className={styles.header}>
         <span className={styles.logo}>やまのなかまたち</span>
         <div className={styles.headerRight}>
-          <button className={styles.iconBtn} onClick={() => router.push("/settings")}>
+          <button className={styles.iconBtn} onClick={() => router.push("/settings")} title="設定">
             <Avatar name={profile.name} photoUrl={profile.photoUrl} size={32} />
           </button>
           {profile.role === "admin" && (
@@ -193,7 +202,13 @@ export default function Home() {
       </header>
 
       <div className={styles.body}>
-        <MemberSidebar members={cards.map((c) => ({ uid: c.uid, name: c.name, photoUrl: c.photoUrl, hasPost: !!c.post }))} />
+        <MemberSidebar
+          members={cards.map((c) => ({ uid: c.uid, name: c.name, photoUrl: c.photoUrl, hasPost: !!c.post }))}
+          onSelect={(uid) => {
+            const card = cards.find((c) => c.uid === uid);
+            if (card) setSelectedCard(card);
+          }}
+        />
         <main className={styles.main}>
           <button className={styles.newPostBtn} onClick={() => setShowForm(!showForm)}>
             {showForm ? "✕ 閉じる" : "＋ 投稿する"}
@@ -216,7 +231,7 @@ export default function Home() {
                     top: pos.top,
                     ...(card.post ? { width: size, height: size } : {}),
                   }}
-                  onClick={() => card.post && setSelectedCard(card)}
+                  onClick={() => setSelectedCard(card)}
                 >
                   {card.post && (
                     <>
@@ -249,7 +264,7 @@ export default function Home() {
         </main>
       </div>
 
-      {selectedCard?.post && (
+      {selectedCard && (
         <div className={styles.overlay} onClick={() => setSelectedCard(null)}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <button className={styles.closeBtn} onClick={() => setSelectedCard(null)}>✕</button>
@@ -257,33 +272,49 @@ export default function Home() {
               <Avatar name={selectedCard.name} photoUrl={selectedCard.photoUrl} size={40} />
               <div>
                 <p className={styles.modalName}>{selectedCard.name}</p>
-                <p className={styles.modalTime}>{formatDistanceToNow(selectedCard.post.createdAt, { addSuffix: true, locale: ja })}</p>
+                {selectedCard.post && (
+                  <p className={styles.modalTime}>{formatDistanceToNow(selectedCard.post.createdAt, { addSuffix: true, locale: ja })}</p>
+                )}
               </div>
             </div>
-            {selectedCard.post.mediaUrl && (
-              selectedCard.post.mediaType === "video"
-                ? <video src={selectedCard.post.mediaUrl} controls className={styles.modalMedia} playsInline />
-                // eslint-disable-next-line @next/next/no-img-element
-                : <img src={selectedCard.post.mediaUrl} alt="" className={styles.modalMedia} />
-            )}
-            {selectedCard.post.comment && <p className={styles.modalComment}>{selectedCard.post.comment}</p>}
-            <div className={styles.reactionRow}>
-              <button
-                className={`${styles.reactionBtn} ${selectedCard.post.myReaction ? styles.reacted : ""}`}
-                onClick={(e) => toggleReaction(e, selectedCard.post!)}
-              >
-                ❤️ {selectedCard.post.reactions.length}
-              </button>
-            </div>
-            {selectedCard.post.reactions.length > 0 && (
-              <div className={styles.reactionList}>
-                {selectedCard.post.reactions.map((r) => (
-                  <div key={r.uid} className={styles.reactionUser}>
-                    <Avatar name={r.name} photoUrl={r.photoUrl} size={28} />
-                    <span>{r.name}</span>
+
+            {selectedCard.bio && <p className={styles.modalBio}>{selectedCard.bio}</p>}
+
+            {selectedCard.post ? (
+              <>
+                {selectedCard.post.mediaUrl && (
+                  selectedCard.post.mediaType === "video"
+                    ? <video src={selectedCard.post.mediaUrl} controls className={styles.modalMedia} playsInline />
+                    // eslint-disable-next-line @next/next/no-img-element
+                    : <img src={selectedCard.post.mediaUrl} alt="" className={styles.modalMedia} />
+                )}
+                {selectedCard.post.comment && <p className={styles.modalComment}>{selectedCard.post.comment}</p>}
+                <div className={styles.reactionRow}>
+                  <button
+                    className={`${styles.reactionBtn} ${selectedCard.post.myReaction ? styles.reacted : ""}`}
+                    onClick={(e) => toggleReaction(e, selectedCard.post!)}
+                  >
+                    ❤️ {selectedCard.post.reactions.length}
+                  </button>
+                  {selectedCard.post.uid === user.uid && (
+                    <button className={styles.deleteBtn} onClick={() => handleDeletePost(selectedCard.post!)}>
+                      削除
+                    </button>
+                  )}
+                </div>
+                {selectedCard.post.reactions.length > 0 && (
+                  <div className={styles.reactionList}>
+                    {selectedCard.post.reactions.map((r) => (
+                      <div key={r.uid} className={styles.reactionUser}>
+                        <Avatar name={r.name} photoUrl={r.photoUrl} size={28} />
+                        <span>{r.name}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                )}
+              </>
+            ) : (
+              <p className={styles.modalNoPost}>最近の投稿はありません</p>
             )}
           </div>
         </div>
