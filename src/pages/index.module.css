@@ -23,17 +23,51 @@
   border-radius: 10px; color: #888; cursor: pointer; font-size: 13px; margin-bottom: 10px;
   flex-shrink: 0;
 }
+ .actionRow {
+   display: flex;
+   gap: 8px;
+   margin-bottom: 10px;
+   flex-shrink: 0;
+ }
+ 
+ .postBtn {
+   flex: 3;
+   padding: 8px;
+   background: #111;
+   border: 1px dashed #333;
+   border-radius: 10px;
+   color: #888;
+   cursor: pointer;
+   font-size: 13px;
+ }
+ 
+ .archiveBtn {
+   flex: 1;
+   padding: 8px;
+   background: #111;
+   border: 1px dashed #333;
+   border-radius: 10px;
+   color: #888;
+   cursor: pointer;
+   font-size: 13px;
+ }
+
 .formWrapper { margin-bottom: 10px; flex-shrink: 0; }
 
 @media (max-width: 640px) {
-  .newPostBtn {
+  .actionRow {
     position: fixed; bottom: 16px; left: 60px; right: 16px;
     margin: 0; z-index: 20;
+    gap: 8px;
+  }
+ 
+  .postBtn, .archiveBtn {
     background: #1a1a1a; border: 1px solid #444;
     box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     border-radius: 24px; padding: 12px;
     width: auto;
   }
+  
   .formWrapper {
     position: fixed; bottom: 60px; left: 60px; right: 16px;
     z-index: 20; background: #0a0a0a; border-radius: 12px;

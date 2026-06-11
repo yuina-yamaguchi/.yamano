@@ -8,9 +8,11 @@ import { formatDistanceToNow } from "date-fns";
 import { ja } from "date-fns/locale";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/hooks/useAuth";
+import { cleanupOldPosts } from "@/lib/cleanupOldPosts";
 import Avatar from "@/components/Avatar";
 import MemberSidebar from "@/components/MemberSidebar";
 import PostForm from "@/components/PostForm";
+import CommentSection from "@/components/CommentSection";
 import styles from "./index.module.css";
 
 type Reaction = { uid: string; name: string; photoUrl?: string };
@@ -136,6 +138,13 @@ export default function Home() {
     if (!loading && user && !profile?.approved) { router.push("/pending"); return; }
   }, [user, profile, loading, router]);
 
+  // ページマウント時に30日以上前の投稿をクリーンアップ（fire-and-forget）
+  useEffect(() => {
+    if (user && profile?.approved) {
+      cleanupOldPosts();
+      }
+    }, [user, profile]);
+    
   useEffect(() => {
     if (!user || !profile?.approved) return;
     buildCards();
@@ -210,9 +219,19 @@ export default function Home() {
           }}
         />
         <main className={styles.main}>
-          <button className={styles.newPostBtn} onClick={() => setShowForm(!showForm)}>
-            {showForm ? "✕ 閉じる" : "＋ 投稿する"}
-          </button>
+          <div className={styles.actionRow}>
+            <button className={styles.postBtn} onClick={() => setShowForm(!showForm)}>
+              {showForm ? "✕ 閉じる" : "＋ 投稿する"}
+            </button>
+            <button className={styles.archiveBtn} onClick={() => router.push("/archive")}>
+              過去アーカイブ
+            </button>
+            {!showForm && (
+              <button className={styles.archiveBtn} onClick={() => router.push("/archive")}>
+                過去アーカイブ
+              </button>
+            )}
+          </div>
           {showForm && <div className={styles.formWrapper}><PostForm onPosted={() => { setShowForm(false); buildCards(); }} /></div>}
           <div className={styles.bubbleField} ref={fieldRef}>
             {cards.map((card, i) => {
@@ -312,6 +331,7 @@ export default function Home() {
                     ))}
                   </div>
                 )}
+                <CommentSection postId={selectedCard.post.id} />
               </>
             ) : (
               <p className={styles.modalNoPost}>最近の投稿はありません</p>

@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { collection, addDoc, serverTimestamp, query, where, orderBy, limit, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/hooks/useAuth";
+import CameraCapture from "./CameraCapture";
 import styles from "./PostForm.module.css";
 
 const CLOUD_NAME = "dxonwszg6";
@@ -15,6 +16,7 @@ export default function PostForm({ onPosted }: { onPosted: () => void }) {
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showCamera, setShowCamera] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -98,53 +100,67 @@ export default function PostForm({ onPosted }: { onPosted: () => void }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className={styles.form}>
-      <div className={styles.mediaRow}>
-        <button type="button" className={styles.mediaBtn} onClick={() => fileRef.current?.click()}>
-          📷 写真 / 動画
-        </button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*,video/*"
-          onChange={onFileChange}
-          style={{ display: "none" }}
+    <>
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <div className={styles.mediaRow}>
+          <button type="button" className={styles.mediaBtn} onClick={() => fileRef.current?.click()}>
+            🌄 ギャラリー
+          </button>
+          <button type="button" className={styles.mediaBtn} onClick={() => setShowCamera(true)}>
+            📸 カメラ
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*,video/*"
+            onChange={onFileChange}
+            style={{ display: "none" }}
+          />
+          {file && <span className={styles.fileName}>{file.name}</span>}
+        </div>
+
+        {preview && (
+          <div className={styles.previewWrapper}>
+            <button type="button" className={styles.removeBtn} onClick={() => { setFile(null); setPreview(null); if (fileRef.current) fileRef.current.value = ""; }}>✕</button>
+            {file?.type.startsWith("video") ? (
+              <video src={preview} controls className={styles.preview} />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={preview} alt="preview" className={styles.preview} />
+            )}
+          </div>
+        )}
+
+        <textarea
+          className={styles.textarea}
+          placeholder="コメントを入力..."
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          rows={3}
+          maxLength={200}
         />
-        {file && <span className={styles.fileName}>{file.name}</span>}
-      </div>
 
-      {preview && (
-        <div className={styles.previewWrapper}>
-          <button type="button" className={styles.removeBtn} onClick={() => { setFile(null); setPreview(null); if (fileRef.current) fileRef.current.value = ""; }}>✕</button>
-          {file?.type.startsWith("video") ? (
-            <video src={preview} controls className={styles.preview} />
-          ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={preview} alt="preview" className={styles.preview} />
-          )}
-        </div>
+        {progress > 0 && progress < 100 && (
+          <div className={styles.progressBar}>
+            <div style={{ width: `${progress}%` }} />
+          </div>
+        )}
+
+        {error && <p className={styles.error}>{error}</p>}
+
+        <button type="submit" className={styles.submitBtn} disabled={loading}>
+          {loading ? "投稿中..." : "投稿する"}
+        </button>
+      </form>
+      {showCamera && (
+        <CameraCapture
+          onClose={() => setShowCamera(false)}
+          onPosted={() => {
+            setShowCamera(false);
+            onPosted();
+          }}
+        />
       )}
-
-      <textarea
-        className={styles.textarea}
-        placeholder="コメントを入力..."
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        rows={3}
-        maxLength={200}
-      />
-
-      {progress > 0 && progress < 100 && (
-        <div className={styles.progressBar}>
-          <div style={{ width: `${progress}%` }} />
-        </div>
-      )}
-
-      {error && <p className={styles.error}>{error}</p>}
-
-      <button type="submit" className={styles.submitBtn} disabled={loading}>
-        {loading ? "投稿中..." : "投稿する"}
-      </button>
-    </form>
+    </>
   );
 }

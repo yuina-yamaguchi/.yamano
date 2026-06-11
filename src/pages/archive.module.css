@@ -1,0 +1,104 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #0a0a0a;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  position: sticky;
+  top: 0;
+  height: 53px;
+  background: rgba(10, 10, 10, 0.9);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #1a1a1a;
+  z-index: 10;
+}
+
+.backBtn {
+  background: none;
+  border: none;
+  color: #f0f0f0;
+  font-size: 20px;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.title {
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.main {
+  flex: 1;
+  padding: 10px;
+}
+
+.status {
+  text-align: center;
+  color: #555;
+  font-size: 14px;
+  padding: 40px 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.card {
+  background: #111;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.media {
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+  display: block;
+}
+
+.cardBody {
+  padding: 12px;
+}
+
+.userRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.userName {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.time {
+  margin-left: auto;
+  font-size: 12px;
+  color: #555;
+}
+
+.comment {
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #ddd;
+}

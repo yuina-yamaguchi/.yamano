@@ -1,0 +1,111 @@
+.section {
+  padding: 8px 14px 14px;
+}
+
+.divider {
+  height: 1px;
+  background: #222;
+  margin-bottom: 12px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.comment {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.commentBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.commentName {
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+}
+
+.commentText {
+  font-size: 14px;
+  color: #f0f0f0;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.deleteCommentBtn {
+  background: none;
+  border: none;
+  color: #555;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.deleteCommentBtn:hover {
+  background: #1a1a1a;
+  color: #ff6b6b;
+}
+
+.inputRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.input {
+  flex: 1;
+  padding: 10px 12px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 20px;
+  color: #f0f0f0;
+  font-size: 14px;
+  outline: none;
+}
+
+.input:focus {
+  border-color: #555;
+}
+
+.sendBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #333;
+  background: #1a1a1a;
+  color: #555;
+  font-size: 14px;
+  cursor: default;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.sendBtnActive {
+  background: #2a6b2a;
+  border-color: #2a6b2a;
+  color: #f0f0f0;
+  cursor: pointer;
+}
+
+.sendBtnActive:hover {
+  background: #347a34;
+}
