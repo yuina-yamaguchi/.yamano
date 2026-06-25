@@ -11,13 +11,14 @@ export type UserProfile = {
   role: string;
   photoUrl?: string;
   bio?: string;
+  commentColor?: string;
 };
 
 type AuthCtx = {
   user: User | null;
   profile: UserProfile | null;
   loading: boolean;
-  updateProfile: (data: Partial<Pick<UserProfile, "name" | "photoUrl" | "bio">>) => Promise<void>;
+  updateProfile: (data: Partial<Pick<UserProfile, "name" | "photoUrl" | "bio" | "commentColor">>) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthCtx>({

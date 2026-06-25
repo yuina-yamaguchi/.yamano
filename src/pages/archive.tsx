@@ -12,16 +12,19 @@ import { formatDistanceToNow } from "date-fns";
 import { ja } from "date-fns/locale";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/hooks/useAuth";
+import PostDetailModal from "@/components/PostDetailModal";
 import Avatar from "@/components/Avatar";
 import styles from "./archive.module.css";
 
 type PostItem = {
   id: string;
+  uid: string;
   userName: string;
   comment: string;
   mediaUrl: string;
   mediaType: string;
   createdAt: Date | null;
+  storagePath?: string;
 };
 
 export default function Archive() {
@@ -29,6 +32,7 @@ export default function Archive() {
   const { user, profile, loading } = useAuth();
   const [posts, setPosts] = useState<PostItem[]>([]);
   const [fetching, setFetching] = useState(true);
+  const [selectedPost, setSelectedPost] = useState<PostItem | null>(null);
 
   // 認証ガード
   useEffect(() => {
@@ -57,11 +61,13 @@ export default function Archive() {
         const data = d.data();
         return {
           id: d.id,
+          uid: data.uid,
           userName: data.userName,
           comment: data.comment ?? "",
           mediaUrl: data.mediaUrl ?? "",
           mediaType: data.mediaType ?? "",
           createdAt: data.createdAt?.toDate?.() ?? null,
+          storagePath: data.storagePath ?? undefined,
         };
       });
 
@@ -80,7 +86,7 @@ export default function Archive() {
         <button className={styles.backBtn} onClick={() => router.back()}>
           ←
         </button>
-        <span className={styles.title}>アーカイブ</span>
+        <span className={styles.title}>投稿アーカイブ</span>
         <span />
       </header>
 
@@ -92,7 +98,12 @@ export default function Archive() {
         ) : (
           <div className={styles.grid}>
             {posts.map((post) => (
-              <div key={post.id} className={styles.card}>
+              <div
+               key={post.id}
+               className={styles.card}
+               style={{ cursor: "pointer" }}
+               onClick={() => setSelectedPost(post)}
+              >
                 {post.mediaUrl && (
                   post.mediaType === "video" ? (
                     <video
@@ -130,6 +141,19 @@ export default function Archive() {
               </div>
             ))}
           </div>
+        )}
+        {selectedPost && (
+          <PostDetailModal
+           postId={selectedPost.id}
+           authorUid={selectedPost.uid}
+           authorName={selectedPost.userName}
+           comment={selectedPost.comment}
+           mediaUrl={selectedPost.mediaUrl}
+           mediaType={selectedPost.mediaType}
+           createdAt={selectedPost.createdAt}
+           storagePath={selectedPost.storagePath}
+           onClose={() => setSelectedPost(null)}
+         />
         )}
       </main>
     </div>

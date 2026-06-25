@@ -14,6 +14,7 @@ export default function SettingsPage() {
   const { user, profile, loading, updateProfile } = useAuth();
   const [name, setName] = useState(profile?.name ?? "");
   const [bio, setBio] = useState(profile?.bio ?? "");
+  const [commentColor, setCommentColor] = useState(profile?.commentColor ?? "#888888");
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -40,7 +41,7 @@ export default function SettingsPage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    await updateProfile({ name, bio });
+    await updateProfile({ name, bio, commentColor });
     setSaving(false);
     setDone(true);
     setTimeout(() => setDone(false), 2000);
@@ -80,6 +81,17 @@ export default function SettingsPage() {
             rows={2}
             placeholder="自己紹介を入力してください..."
           />
+
+          <label className={styles.label}>コメントカラー</label>
+          <div className={styles.colorRow}>
+           <input
+             type="color"
+             value={commentColor}
+             onChange={(e) => setCommentColor(e.target.value)}
+             className={styles.colorPicker}
+           />
+           <span className={styles.colorValue}>{commentColor}</span>
+         </div>
 
           <label className={styles.label}>メールアドレス</label>
           <input className={styles.input} value={user?.email ?? ""} disabled />

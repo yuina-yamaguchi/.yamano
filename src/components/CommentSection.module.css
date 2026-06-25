@@ -23,6 +23,15 @@
   gap: 8px;
 }
 
+.commentColorBar {
+  width: 3px;
+  height: 100%;
+  min-height: 24px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  background: transparent;
+}
+
 .commentBody {
   display: flex;
   flex-direction: column;

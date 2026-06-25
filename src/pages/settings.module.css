@@ -32,3 +32,30 @@
   background: none; border: 1px solid #333;
   border-radius: 8px; color: #ff6b6b; cursor: pointer; font-size: 15px;
 }
+.colorRow {
+   display: flex;
+   align-items: center;
+   gap: 12px;
+   padding: 8px 0;
+}
+.colorPicker {
+   width: 40px;
+   height: 40px;
+   border: 1px solid #333;
+   border-radius: 8px;
+   background: none;
+   cursor: pointer;
+   padding: 2px;
+} 
+.colorValue {
+   font-size: 13px;
+   color: #888;
+   font-family: monospace;
+}
+.colorPicker::-webkit-color-swatch-wrapper {
+   padding: 0; 
+}
+.colorPicker::-webkit-color-swatch {
+   border: none;
+   border-radius: 6px;
+}

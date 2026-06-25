@@ -67,7 +67,7 @@
     border-radius: 24px; padding: 12px;
     width: auto;
   }
-  
+
   .formWrapper {
     position: fixed; bottom: 60px; left: 60px; right: 16px;
     z-index: 20; background: #0a0a0a; border-radius: 12px;
@@ -151,48 +151,6 @@
   border-radius: 50%;
   z-index: 2;
 }
-
-/* モーダル */
-.overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.8);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 100; padding: 16px;
-}
-.modal {
-  background: #111; border-radius: 16px; width: 100%; max-width: 480px;
-  max-height: 90vh; overflow-y: auto; position: relative;
-}
-.closeBtn {
-  position: absolute; top: 12px; right: 12px;
-  background: #222; border: none; color: #f0f0f0;
-  width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 14px; z-index: 1;
-}
-.modalHeader { display: flex; align-items: center; gap: 10px; padding: 14px; }
-.modalName { font-weight: 600; font-size: 15px; }
-.modalTime { font-size: 12px; color: #555; }
-.modalBio {
-  margin: 0 14px 12px; padding: 12px;
-  background: #1a1a1a; border-radius: 8px;
-  font-size: 14px; color: #ddd; line-height: 1.5;
-  white-space: pre-wrap;
-}
-.modalMedia { width: 100%; max-height: 400px; object-fit: cover; display: block; }
-.modalComment { padding: 12px 14px; font-size: 15px; line-height: 1.6; }
-.reactionRow { padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
-.reactionBtn {
-  padding: 6px 14px; background: #1a1a1a; border: 1px solid #2a2a2a;
-  border-radius: 20px; cursor: pointer; font-size: 14px; color: #888;
-}
-.reacted { background: #2a1a1a; border-color: #ff6b6b; color: #ff6b6b; }
-.deleteBtn {
-  margin-left: auto; padding: 6px 12px; background: none; border: 1px solid #333;
-  border-radius: 20px; color: #ff6b6b; cursor: pointer; font-size: 13px;
-}
-.modalNoPost {
-  padding: 40px 14px; text-align: center; color: #444; font-size: 14px;
-}
-.reactionList { padding: 0 14px 14px; display: flex; flex-wrap: wrap; gap: 10px; }
-.reactionUser { display: flex; align-items: center; gap: 6px; font-size: 13px; }
 
 /* スマホ調整 */
 @media (max-width: 640px) {

@@ -23,6 +23,7 @@ type Comment = {
   photoUrl?: string;
   text: string;
   createdAt: Date | null;
+  color?: string;
 };
 
 type Props = {
@@ -51,6 +52,7 @@ export default function CommentSection({ postId }: Props) {
           photoUrl: data.photoUrl,
           text: data.text,
           createdAt: data.createdAt?.toDate?.() ?? null,
+          color: data.color ?? undefined,
         };
       });
       setComments(list);
@@ -66,6 +68,7 @@ export default function CommentSection({ postId }: Props) {
       uid: user.uid,
       userName: profile?.name ?? user.email,
       photoUrl: profile?.photoUrl ?? null,
+      color: profile?.commentColor ?? null,
       text: trimmed,
       createdAt: serverTimestamp(),
     });
@@ -94,10 +97,19 @@ export default function CommentSection({ postId }: Props) {
       <div className={styles.list}>
         {comments.map((c) => (
           <div key={c.id} className={styles.comment}>
+            <div
+             className={styles.commentColorBar}
+             style={c.color ? { backgroundColor: c.color } : undefined}
+            />
             <Avatar name={c.userName} photoUrl={c.photoUrl} size={24} />
             <div className={styles.commentBody}>
               <span className={styles.commentName}>{c.userName}</span>
-              <span className={styles.commentText}>{c.text}</span>
+              <span
+               className={styles.commentText}
+               style={c.color ? { color: c.color } : undefined}
+              >
+               {c.text}
+              </span>
             </div>
             {c.uid === user?.uid && (
               <button
