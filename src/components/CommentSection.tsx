@@ -28,9 +28,10 @@ type Comment = {
 
 type Props = {
   postId: string;
+  authorUid: string;
 };
 
-export default function CommentSection({ postId }: Props) {
+export default function CommentSection({ postId, authorUid }: Props) {
   const { user, profile } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
   const [text, setText] = useState("");
@@ -58,7 +59,7 @@ export default function CommentSection({ postId }: Props) {
       setComments(list);
     });
     return unsub;
-  }, [postId]);
+  }, [postId, authorUid]);
 
   async function handleSubmit() {
     const trimmed = text.trim();
@@ -72,6 +73,20 @@ export default function CommentSection({ postId }: Props) {
       text: trimmed,
       createdAt: serverTimestamp(),
     });
+    // 自分以外の投稿の場合、通知を作成
+    if (user.uid !== authorUid) {
+      const preview = trimmed.length > 5 ? trimmed.slice(0, 5) + "..." : trimmed;
+      await addDoc(collection(db, "notifications"), {
+        uid: authorUid,
+        type: "comment",
+        message: `${profile?.name ?? user.email}さんがコメントしました: "${preview}"`,
+        postId,
+        actorName: profile?.name ?? user.email,
+        read: false,
+        createdAt: serverTimestamp(),
+      });
+    }
+
     setText("");
   }
 

@@ -31,6 +31,7 @@ export default function Archive() {
   const router = useRouter();
   const { user, profile, loading } = useAuth();
   const [posts, setPosts] = useState<PostItem[]>([]);
+  const [photoMap, setPhotoMap] = useState<Map<string, string>>(new Map());
   const [fetching, setFetching] = useState(true);
   const [selectedPost, setSelectedPost] = useState<PostItem | null>(null);
 
@@ -40,7 +41,7 @@ export default function Archive() {
     if (!loading && user && !profile?.approved) { router.push("/pending"); return; }
   }, [user, profile, loading, router]);
 
-  // 30日以内の投稿を取得
+  // 30日以内の投稿 + ユーザーアイコンを取得
   useEffect(() => {
     if (!user || !profile?.approved) return;
 
@@ -48,16 +49,26 @@ export default function Archive() {
       Date.now() - 30 * 24 * 60 * 60 * 1000
     );
 
-    async function fetchPosts() {
-      const snap = await getDocs(
-        query(
-          collection(db, "posts"),
-          where("createdAt", ">=", thirtyDaysAgo),
-          orderBy("createdAt", "desc")
-        )
-      );
+    async function fetchArchive() {
+      const [usersSnap, postsSnap] = await Promise.all([
+        getDocs(collection(db, "users")),
+        getDocs(
+          query(
+            collection(db, "posts"),
+            where("createdAt", ">=", thirtyDaysAgo),
+            orderBy("createdAt", "desc")
+          )
+        ),
+      ]);
 
-      const list: PostItem[] = snap.docs.map((d) => {
+      const map = new Map<string, string>();
+      usersSnap.docs.forEach((d) => {
+        const data = d.data();
+        if (data.photoUrl) map.set(data.uid, data.photoUrl);
+      });
+      setPhotoMap(map);
+
+      const list: PostItem[] = postsSnap.docs.map((d) => {
         const data = d.data();
         return {
           id: d.id,
@@ -75,7 +86,7 @@ export default function Archive() {
       setFetching(false);
     }
 
-    fetchPosts();
+    fetchArchive();
   }, [user, profile]);
 
   if (loading || !user || !profile?.approved) return null;
@@ -123,7 +134,7 @@ export default function Archive() {
                 )}
                 <div className={styles.cardBody}>
                   <div className={styles.userRow}>
-                    <Avatar name={post.userName} size={24} />
+                    <Avatar name={post.userName} photoUrl={photoMap.get(post.uid)} size={24} />
                     <span className={styles.userName}>{post.userName}</span>
                     {post.createdAt && (
                       <span className={styles.time}>

@@ -14,13 +14,71 @@
   padding: 12px 14px; background: #111; border-radius: 10px;
   margin-bottom: 8px; border: 1px solid #1e1e1e;
 }
+
 .name { font-weight: 600; font-size: 14px; }
 .email { font-size: 12px; color: #555; margin-top: 2px; }
 .approveBtn {
   padding: 7px 14px; background: #f0f0f0; color: #0a0a0a;
   border: none; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer;
 }
+
 .revokeBtn {
   padding: 7px 14px; background: #222; color: #ff6b6b;
   border: 1px solid #333; border-radius: 6px; font-size: 13px; cursor: pointer;
+}
+
+.announceForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.announceInput, .announceTextarea {
+  width: 100%;
+  padding: 10px 12px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #f0f0f0;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.announceInput:focus, .announceTextarea:focus {
+  border-color: #555;
+}
+
+.announceTextarea {
+  resize: vertical;
+  font-family: inherit;
+}
+
+.checkLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #aaa;
+  cursor: pointer;
+}
+
+.announceBtn {
+  padding: 9px 16px;
+  background: #f0f0f0;
+  color: #0a0a0a;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.announceBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
 }

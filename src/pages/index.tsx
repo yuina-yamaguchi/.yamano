@@ -7,6 +7,8 @@ import {
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/hooks/useAuth";
 import { cleanupOldPosts } from "@/lib/cleanupOldPosts";
+import AnnouncementBanner from "@/components/AnnouncementBanner";
+import NotificationBell from "@/components/NotificationBell";
 import Avatar from "@/components/Avatar";
 import MemberSidebar from "@/components/MemberSidebar";
 import PostForm from "@/components/PostForm";
@@ -175,6 +177,7 @@ export default function Home() {
       <header className={styles.header}>
         <span className={styles.logo}>やまのなかまたち</span>
         <div className={styles.headerRight}>
+          <NotificationBell />
           <button className={styles.iconBtn} onClick={() => router.push("/settings")} title="設定">
             <Avatar name={profile.name} photoUrl={profile.photoUrl} size={32} />
           </button>
@@ -183,6 +186,8 @@ export default function Home() {
           )}
         </div>
       </header>
+
+      <AnnouncementBanner />
 
       <div className={styles.body}>
         <MemberSidebar

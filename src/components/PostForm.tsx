@@ -6,7 +6,7 @@ import CameraCapture from "./CameraCapture";
 import styles from "./PostForm.module.css";
 
 const CLOUD_NAME = "dxonwszg6";
-const UPLOAD_PRESET = "setlog_upload";
+const UPLOAD_PRESET = ".yamano_upload";
 
 export default function PostForm({ onPosted }: { onPosted: () => void }) {
   const { user, profile } = useAuth();

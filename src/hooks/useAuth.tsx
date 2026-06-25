@@ -50,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             role: userData.role || "user",
             photoUrl: userData.photoUrl,
             bio: userData.bio,
+            commentColor: userData.commentColor,
             email: privateData.email || u.email || "",
           });
         } else {

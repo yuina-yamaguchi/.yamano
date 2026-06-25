@@ -8,6 +8,7 @@ import {
   setDoc,
   deleteDoc,
   deleteDoc as deletePostDoc,
+  addDoc, serverTimestamp,
 } from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
 import { formatDistanceToNow } from "date-fns";
@@ -80,6 +81,18 @@ export default function PostDetailModal({
         name: profile.name,
         photoUrl: profile.photoUrl ?? null,
       });
+      // 自分以外の投稿にリアクションした場合、通知を作成
+      if (user.uid !== authorUid) {
+        await addDoc(collection(db, "notifications"), {
+          uid: authorUid,
+          type: "reaction",
+          message: `${profile.name}さんがあなたの投稿にリアクションしました`,
+          postId,
+          actorName: profile.name,
+          read: false,
+          createdAt: serverTimestamp(),
+        });
+      }  
     }
   }
 
@@ -147,7 +160,7 @@ export default function PostDetailModal({
           </div>
         )}
 
-        <CommentSection postId={postId} />
+        <CommentSection postId={postId} authorUid={authorUid} />
       </div>
     </div>
   );

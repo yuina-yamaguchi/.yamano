@@ -1,24 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { uploadPostImage } from "@/lib/storage";
 import { useAuth } from "@/hooks/useAuth";
 import { useCamera } from "@/hooks/useCamera";
 import styles from "./CameraCapture.module.css";
 
+const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+type Mode = "photo" | "video";
+const SWIPE_THRESHOLD = 30;
+
 type Props = {
-  /** 閉じる／キャンセル */
   onClose: () => void;
-  /** 投稿成功後 */
   onPosted: () => void;
 };
 
-/**
- * カメラで撮影 → Firebase Storage アップロード → Firestore 保存 を行うコンポーネント。
- *
- * 状態遷移:
- *   init (カメラ起動中) → ready (撮影可能) → preview (撮影後確認) → uploading → done
- */
 export default function CameraCapture({ onClose, onPosted }: Props) {
   const { user, profile } = useAuth();
   const {
@@ -29,21 +26,42 @@ export default function CameraCapture({ onClose, onPosted }: Props) {
     startCamera,
     stopCamera,
     capturePhoto,
+    startRecording,
+    stopRecording,
+    resetRecording,
+    isRecording,
+    recordingTime,
+    recordedBlob,
+    isVideoSupported,
   } = useCamera();
 
+  const [mode, setMode] = useState<Mode>("photo");
   const [photoBlob, setPhotoBlob] = useState<Blob | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [comment, setComment] = useState("");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const galleryRef = useRef<HTMLInputElement>(null);
+  const touchStartX = useRef(0);
 
-  // マウント時にカメラ起動
   useEffect(() => {
     startCamera();
-    // アンマウント時にカメラ停止（useCamera の useEffect が自動で行う）
   }, [startCamera]);
 
-  /** 撮影ボタン: video のフレームをキャプチャ */
+  useEffect(() => {
+    return () => {
+      if (photoUrl) URL.revokeObjectURL(photoUrl);
+    };
+  }, [photoUrl]);
+
   function handleCapture() {
+    if (mode === "video") {
+      if (!isRecording) {
+        startRecording();
+      }
+      return;
+    }
+
     const blob = capturePhoto();
     if (!blob) {
       setError("撮影に失敗しました");
@@ -51,42 +69,68 @@ export default function CameraCapture({ onClose, onPosted }: Props) {
     }
     setPhotoBlob(blob);
     setPhotoUrl(URL.createObjectURL(blob));
-    // 撮影後はカメラを停止（バッテリー節約・プライバシー）
     stopCamera();
   }
 
-  /** 撮り直し */
+  useEffect(() => {
+    if (!recordedBlob) return;
+    setPhotoBlob(recordedBlob);
+    setPhotoUrl(URL.createObjectURL(recordedBlob));
+  }, [recordedBlob]);
+
+  function handleGallery(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (photoUrl) URL.revokeObjectURL(photoUrl);
+    setPhotoBlob(file);
+    setPhotoUrl(URL.createObjectURL(file));
+    setError("");
+    stopCamera();
+  }
+
   function handleRetake() {
+    if (photoUrl) URL.revokeObjectURL(photoUrl);
     setPhotoBlob(null);
     setPhotoUrl(null);
+    setComment("");
     setError("");
+    resetRecording();
     startCamera();
   }
 
-  /** アップロード + Firestore 保存 */
   async function handleUpload() {
-    if (!user || !photoBlob) return;
+    if (!user || !photoBlob || !CLOUD_NAME || !UPLOAD_PRESET) {
+      if (!CLOUD_NAME || !UPLOAD_PRESET) {
+        setError("Cloudinaryの設定が不足しています");
+      }
+      setUploading(false);
+      return;
+    }
     setUploading(true);
     setError("");
 
     try {
-      // 1. Firebase Storage にアップロード
-      const downloadUrl = await uploadPostImage(user.uid, photoBlob);
+      const formData = new FormData();
+      const fileName = mode === "video" ? "video.mp4" : "photo.jpg";
+      formData.append("file", photoBlob, fileName);
+      formData.append("upload_preset", UPLOAD_PRESET);
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`,
+        { method: "POST", body: formData }
+      );
+      if (!res.ok) throw new Error("upload failed");
+      const data = await res.json();
 
-      // 2. Firestore の posts コレクションに保存
-      //    既存の PostForm と同じ構造で、storagePath も一緒に保存（cleanup で使う）
       await addDoc(collection(db, "posts"), {
         uid: user.uid,
         userName: profile?.name ?? user.email,
-        comment: "", // カメラ撮影の場合はコメントなし（空文字）
-        mediaUrl: downloadUrl,
+        comment: comment.trim(),
+        mediaUrl: data.secure_url,
         mediaType: "image",
-        storagePath: `posts/${user.uid}/${Date.now()}.jpg`, // cleanupOldPosts で使う
         reactions: {},
         createdAt: serverTimestamp(),
       });
 
-      // 3. 成功を親に通知
       onPosted();
     } catch (err) {
       console.error(err);
@@ -96,15 +140,32 @@ export default function CameraCapture({ onClose, onPosted }: Props) {
     }
   }
 
-  // カメラ起動エラー
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX;
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    const diff = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(diff) < SWIPE_THRESHOLD) return;
+    if (diff < 0) {
+      setMode("video");
+    } else {
+      setMode("photo");
+    }
+  }
+
+  function toggleMode() {
+    setMode((prev) => (prev === "photo" ? "video" : "photo"));
+  }
+
+  const isVideo = !!photoBlob && (mode === "video" || photoBlob.type.startsWith("video"));
+
   if (cameraError) {
     return (
       <div className={styles.overlay}>
-        <div className={styles.container}>
+        <button className={styles.closeBtn} onClick={onClose}>✕</button>
+        <div className={styles.errorContainer}>
           <p className={styles.error}>{cameraError}</p>
-          <button className={styles.btn} onClick={onClose}>
-            閉じる
-          </button>
         </div>
       </div>
     );
@@ -112,28 +173,34 @@ export default function CameraCapture({ onClose, onPosted }: Props) {
 
   return (
     <div className={styles.overlay}>
-      <div className={styles.container}>
-        {/* ヘッダー */}
-        <div className={styles.header}>
-          <span className={styles.title}>カメラ</span>
-          <button className={styles.closeBtn} onClick={onClose}>
-            ✕
-          </button>
-        </div>
+      <button className={styles.closeBtn} onClick={onClose}>✕</button>
 
-        {/* プレビュー or カメラ映像 */}
-        {photoUrl ? (
-          // 撮影後の確認画面
-          <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+      {photoUrl ? (
+        <>
+          {isVideo ? (
+            <video
+              src={photoUrl}
+              className={styles.preview}
+              autoPlay
+              loop
+              muted
+              playsInline
+            />
+          ) : (
+            /* eslint-disable-next-line @next/next/no-img-element */
             <img src={photoUrl} alt="撮影した写真" className={styles.preview} />
-
+          )}
+          <div className={styles.bottomArea}>
+            <textarea
+              className={styles.commentInput}
+              placeholder="コメントを入力..."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              rows={2}
+              maxLength={200}
+            />
             <div className={styles.actions}>
-              <button
-                className={styles.btn}
-                onClick={handleRetake}
-                disabled={uploading}
-              >
+              <button className={styles.btn} onClick={handleRetake} disabled={uploading}>
                 撮り直す
               </button>
               <button
@@ -144,48 +211,66 @@ export default function CameraCapture({ onClose, onPosted }: Props) {
                 {uploading ? "アップロード中..." : "アップロード"}
               </button>
             </div>
-          </>
-        ) : (
-          // カメラプレビュー（撮影前）
-          <>
-            <div className={styles.videoWrapper}>
-              <video
-                ref={videoRef}
-                autoPlay
-                muted
-                playsInline // iPhone Safari 必須
-                className={styles.video}
-              />
+          </div>
+        </>
+      ) : (
+        <>
+          <video
+            ref={videoRef}
+            autoPlay
+            muted
+            playsInline
+            className={styles.video}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          />
+          {!isCameraReady && (
+            <p className={styles.loadingText}>カメラを起動中...</p>
+          )}
+
+          {isRecording && (
+            <div className={styles.recordingTimer}>
+              <span className={styles.recordingDot} />
+              {recordingTime}s
             </div>
+          )}
 
-            {!isCameraReady && (
-              <p className={styles.loadingText}>カメラを起動中...</p>
-            )}
+          <div className={styles.modePills} onClick={toggleMode}>
+            <span className={`${styles.modePill} ${mode === "photo" ? styles.modePillActive : ""}`}>
+              写真
+            </span>
+            <span className={`${styles.modePill} ${mode === "video" ? styles.modePillActive : ""}`}>
+              動画
+            </span>
+          </div>
 
-            <div className={styles.actions}>
-              <button
-                className={styles.btn}
-                onClick={onClose}
-              >
-                キャンセル
-              </button>
-              <button
-                className={`${styles.btn} ${styles.btnPrimary}`}
-                onClick={handleCapture}
-                disabled={!isCameraReady}
-              >
-                撮影
-              </button>
-            </div>
-          </>
-        )}
+          <button
+            className={`${styles.shutterBtn} ${isRecording ? styles.recording : ""}`}
+            onClick={handleCapture}
+            disabled={!isCameraReady || (mode === "video" && !isVideoSupported)}
+          />
 
-        {/* エラーメッセージ */}
-        {error && <p className={styles.error}>{error}</p>}
+          <button
+            className={styles.galleryBtn}
+            onClick={() => galleryRef.current?.click()}
+            disabled={!isCameraReady || isRecording}
+          >
+            🌄
+          </button>
 
-        {/* canvas（非表示）: capturePhoto で利用 */}
-        <canvas ref={canvasRef} style={{ display: "none" }} />
-      </div>
+          <input
+            ref={galleryRef}
+            type="file"
+            accept="image/*,video/*"
+            onChange={handleGallery}
+            style={{ display: "none" }}
+          />
+        </>
+      )}
+
+      {error && <p className={styles.error}>{error}</p>}
+
+      <canvas ref={canvasRef} style={{ display: "none" }} />
     </div>
   );
 }

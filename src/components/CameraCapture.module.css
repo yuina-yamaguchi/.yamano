@@ -1,102 +1,230 @@
-/* 暗いオーバーレイ */
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: #000;
   z-index: 1000;
-}
-
-.container {
-  background: #111;
-  border-radius: 16px;
-  padding: 20px;
-  width: 90%;
-  max-width: 420px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #f0f0f0;
+  overflow: hidden;
 }
 
 .closeBtn {
-  background: none;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(0, 0, 0, 0.5);
   border: none;
-  color: #f0f0f0;
-  font-size: 20px;
+  color: #fff;
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   cursor: pointer;
-  width: 32px;
-  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  z-index: 10;
 }
 
 .closeBtn:hover {
-  background: #222;
-}
-
-/* カメラ映像 */
-.videoWrapper {
-  background: #000;
-  border-radius: 12px;
-  overflow: hidden;
-  aspect-ratio: 4 / 3;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .video {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.loadingText {
-  text-align: center;
-  color: #888;
-  font-size: 14px;
+.modePills {
+  position: absolute;
+  bottom: 140px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 20px;
+  padding: 3px;
+  z-index: 10;
+  gap: 2px;
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  user-select: none;
 }
 
-/* 撮影した写真のプレビュー */
+.modePill {
+  padding: 6px 18px;
+  border-radius: 18px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.modePillActive {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-weight: 600;
+}
+
+.shutterBtn {
+  position: absolute;
+  bottom: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: #fff;
+  border: 4px solid rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.shutterBtn::after {
+  content: "";
+  display: block;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #ccc;
+  transition: all 0.2s;
+}
+
+.shutterBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.shutterBtn.recording {
+  border-color: #ff4444;
+}
+
+.shutterBtn.recording::after {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background: #ff4444;
+  border: none;
+}
+
+.galleryBtn {
+  position: absolute;
+  left: 20px;
+  bottom: 48px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  cursor: pointer;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  z-index: 10;
+}
+
+.galleryBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.recordingTimer {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 6px 14px;
+  border-radius: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.recordingDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ff4444;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 .preview {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  border-radius: 12px;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
+  height: 100%;
+  object-fit: contain;
   background: #000;
 }
 
-/* アクションボタン行 */
+.bottomArea {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 16px 32px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+  z-index: 10;
+}
+
+.commentInput {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 14px;
+  resize: none;
+  backdrop-filter: blur(4px);
+}
+
+.commentInput::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.commentInput:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.25);
+}
+
 .actions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
 }
 
 .btn {
   flex: 1;
   padding: 12px;
-  border: 1px solid #333;
-  border-radius: 8px;
-  background: #222;
-  color: #f0f0f0;
+  border-radius: 24px;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
   font-size: 15px;
   cursor: pointer;
+  backdrop-filter: blur(4px);
   text-align: center;
 }
 
@@ -106,14 +234,39 @@
 }
 
 .btnPrimary {
-  background: #f0f0f0;
+  background: #fff;
   color: #0a0a0a;
-  border-color: #f0f0f0;
   font-weight: 700;
 }
 
-.error {
-  color: #ff6b6b;
-  font-size: 13px;
+.loadingText {
+  position: absolute;
+  bottom: 150px;
+  left: 0;
+  right: 0;
   text-align: center;
+  color: #888;
+  font-size: 14px;
+  z-index: 10;
+}
+
+.error {
+  position: absolute;
+  bottom: 150px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: #ff6b6b;
+  font-size: 14px;
+  z-index: 10;
+}
+
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 16px;
+  padding: 20px;
 }

@@ -1,0 +1,54 @@
+.banner {
+  padding: 0 10px;
+  flex-shrink: 0;
+}
+.item {
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+.important {
+  border-color: #ff6b6b;
+  background: #1a1010;
+}
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #888;
+  background: #1a1a1a;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.titleText {
+  flex: 1;
+  font-weight: 600;
+  font-size: 14px;
+}
+.pinIcon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.dismissBtn {
+  background: none;
+  border: none;
+  color: #555;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px;
+  flex-shrink: 0;
+}
+.content {
+  font-size: 13px;
+  color: #aaa;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}

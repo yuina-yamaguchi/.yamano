@@ -1,30 +1,28 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 
-/**
- * WebRTC カメラを管理するカスタムフック。
- *
- * - facingMode: "environment"（背面カメラ）を優先
- * - <video playsInline muted> — iPhone Safari 対策
- * - アンマウント時・stopCamera() で全トラックを確実に停止
- */
+const MAX_DURATION = 3;
+
 export function useCamera() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+  const [isVideoSupported, setIsVideoSupported] = useState(false);
+  const [videoMimeType, setVideoMimeType] = useState("");
 
-  /**
-   * カメラを起動する。
-   * environment が使えなければ user にフォールバック。
-   */
   const startCamera = useCallback(async () => {
     setError(null);
     setIsCameraReady(false);
 
     try {
-      // まず背面カメラを試す
       let stream: MediaStream | null = null;
       try {
         stream = await navigator.mediaDevices.getUserMedia({
@@ -32,7 +30,6 @@ export function useCamera() {
           audio: false,
         });
       } catch {
-        // 背面がない場合は前面カメラを試す
         stream = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: false,
@@ -41,10 +38,8 @@ export function useCamera() {
 
       streamRef.current = stream;
 
-      // video 要素にストリームをセット
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        // メタデータが読み込まれたら準備完了
         videoRef.current.onloadedmetadata = () => {
           setIsCameraReady(true);
         };
@@ -58,10 +53,6 @@ export function useCamera() {
     }
   }, []);
 
-  /**
-   * カメラを停止し、全トラックを解放する。
-   * バッテリー節約 + 他のアプリがカメラを使えるようにするために必ず呼ぶ。
-   */
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
@@ -73,33 +64,107 @@ export function useCamera() {
     setIsCameraReady(false);
   }, []);
 
-  /**
-   * 現在の映像フレームを canvas に描画し、JPEG Blob として返す。
-   * 撮影前に video が再生中であることを確認すること。
-   */
   const capturePhoto = useCallback((): Blob | null => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas || !isCameraReady) return null;
 
-    // video の実際の解像度で canvas を設定
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
 
-    // 現在のフレームを描画（左右反転を避けるため scale は使わない）
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // JPEG 形式で Blob 化（品質 0.8 = 画質とファイルサイズのバランス）
     const blob = dataURLToBlob(canvas.toDataURL("image/jpeg", 0.8));
     return blob;
   }, [isCameraReady]);
 
-  // アンマウント時に自動クリーンアップ
+  const startRecording = useCallback(() => {
+    const stream = streamRef.current;
+    if (!stream) return;
+
+    const types = [
+      "video/mp4",
+      "video/webm;codecs=vp9,opus",
+      "video/webm;codecs=vp8,opus",
+      "video/webm",
+    ];
+    let mime = "";
+    for (const t of types) {
+      if (MediaRecorder.isTypeSupported(t)) {
+        mime = t;
+        break;
+      }
+    }
+    if (!mime) {
+      setError("お使いの端末では動画撮影に対応していません");
+      return;
+    }
+
+    setVideoMimeType(mime);
+    chunksRef.current = [];
+    setRecordedBlob(null);
+    setRecordingTime(0);
+
+    const recorder = new MediaRecorder(stream, { mimeType: mime });
+    recorderRef.current = recorder;
+
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunksRef.current.push(e.data);
+    };
+
+    recorder.onstop = () => {
+      const blob = new Blob(chunksRef.current, { type: mime });
+      setRecordedBlob(blob);
+      setIsRecording(false);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    };
+
+    recorder.start();
+    setIsRecording(true);
+
+    let elapsed = 0;
+    timerRef.current = setInterval(() => {
+      elapsed++;
+      setRecordingTime(elapsed);
+      if (elapsed >= MAX_DURATION) {
+        stopRecording();
+      }
+    }, 1000);
+  }, []);
+
+  const stopRecording = useCallback(() => {
+    if (recorderRef.current && recorderRef.current.state === "recording") {
+      recorderRef.current.stop();
+    }
+  }, []);
+
+  const resetRecording = useCallback(() => {
+    setRecordedBlob(null);
+    setRecordingTime(0);
+    setIsRecording(false);
+    chunksRef.current = [];
+    recorderRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    setIsVideoSupported(typeof MediaRecorder !== "undefined");
+  }, []);
+
   useEffect(() => {
     return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (recorderRef.current && recorderRef.current.state === "recording") {
+        recorderRef.current.stop();
+      }
       stopCamera();
     };
   }, [stopCamera]);
@@ -112,12 +177,17 @@ export function useCamera() {
     startCamera,
     stopCamera,
     capturePhoto,
+    startRecording,
+    stopRecording,
+    resetRecording,
+    isRecording,
+    recordingTime,
+    recordedBlob,
+    isVideoSupported,
+    videoMimeType,
   };
 }
 
-/**
- * dataURL → Blob 変換（内部利用）
- */
 function dataURLToBlob(dataURL: string): Blob | null {
   const arr = dataURL.split(",");
   if (arr.length < 2) return null;

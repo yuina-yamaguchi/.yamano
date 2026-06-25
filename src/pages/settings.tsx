@@ -38,6 +38,15 @@ export default function SettingsPage() {
     setUploading(false);
   }
 
+  async function handleIconReset() {
+    await updateProfile({ photoUrl: "" });
+  }
+
+  async function handleColorReset() {
+    setCommentColor("#888888");
+    await updateProfile({ commentColor: "#888888" });
+  }
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -55,11 +64,14 @@ export default function SettingsPage() {
       </header>
 
       <main className={styles.main}>
-        <div className={styles.iconSection}>
+          <div className={styles.iconSection}>
           <Avatar name={profile.name} photoUrl={profile.photoUrl} size={80} />
-          <button className={styles.changeIcon} onClick={() => fileRef.current?.click()} disabled={uploading}>
-            {uploading ? "アップロード中..." : "アイコンを変更"}
-          </button>
+          <div className={styles.iconActions}>
+            <button className={styles.changeIcon} onClick={() => fileRef.current?.click()} disabled={uploading}>
+              {uploading ? "アップロード中..." : "アイコンを変更"}
+            </button>
+            <button className={styles.resetBtn} onClick={handleIconReset}>リセット</button>
+          </div>
           <input ref={fileRef} type="file" accept="image/*" onChange={handleIconChange} style={{ display: "none" }} />
         </div>
 
@@ -91,6 +103,7 @@ export default function SettingsPage() {
              className={styles.colorPicker}
            />
            <span className={styles.colorValue}>{commentColor}</span>
+           <button type="button" className={styles.resetBtn} onClick={handleColorReset}>リセット</button>
          </div>
 
           <label className={styles.label}>メールアドレス</label>
